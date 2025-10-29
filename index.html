@@ -75,6 +75,7 @@
             background: var(--primary);
             color: var(--white);
             transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
 
         section {
@@ -594,10 +595,10 @@
     </header>
 
     <nav>
-        <button class="nav-btn active" onclick="showSection('intro')">🏠 Beranda</button>
-        <button class="nav-btn" onclick="showSection('materi')">📘 Materi</button>
-        <button class="nav-btn" onclick="showSection('matching-game')">🎮 Game Mencocokkan</button>
-        <button class="nav-btn" onclick="showSection('latihan')">📝 Latihan Soal</button>
+        <button class="nav-btn active" data-section="intro">🏠 Beranda</button>
+        <button class="nav-btn" data-section="materi">📘 Materi</button>
+        <button class="nav-btn" data-section="matching-game">🎮 Game Mencocokkan</button>
+        <button class="nav-btn" data-section="latihan">📝 Latihan Soal</button>
     </nav>
 
     <section id="intro" class="visible">
@@ -702,4 +703,567 @@
                                 <td>に (ni)</td>
                                 <td>Penanda waktu/tempat</td>
                                 <td>がっこう<b>に</b>いきます</td>
- 
+                            </tr>
+                            <tr>
+                                <td>で (de)</td>
+                                <td>Penanda tempat kegiatan</td>
+                                <td>としょかん<b>で</b>べんきょうします</td>
+                            </tr>
+                            <tr>
+                                <td>へ (e)</td>
+                                <td>Penanda arah</td>
+                                <td>にほん<b>へ</b>いきます</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="dialog-section">
+            <h2 class="section-title">💬 Contoh Percakapan</h2>
+            <div class="dialog-card">
+                <h3>Percakapan Sehari-hari</h3>
+                <div class="dialog-line">
+                    <div class="dialog-speaker">やまださん:</div>
+                    <div class="japanese">おはようございます。</div>
+                    <div class="romaji">Ohayō gozaimasu.</div>
+                    <div>Selamat pagi.</div>
+                </div>
+                <div class="dialog-line">
+                    <div class="dialog-speaker">たなかさん:</div>
+                    <div class="japanese">おはよう。いまから がっこうへ いきます。</div>
+                    <div class="romaji">Ohayō. Ima kara gakkō e ikimasu.</div>
+                    <div>Selamat pagi. Sekarang akan pergi ke sekolah.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="matching-game">
+        <h2 class="section-title">🎮 Game Mencocokkan</h2>
+        
+        <div class="game-instructions">
+            <p><strong>Cara Bermain:</strong> Pilih kata dalam bahasa Jepang di kolom kiri, lalu pilih artinya yang sesuai di kolom kanan. Cocokkan semua pasangan dengan benar!</p>
+        </div>
+
+        <div class="matching-container">
+            <div class="word-column" id="word-column">
+                <!-- Kata Jepang akan diisi JavaScript -->
+            </div>
+            <div class="meaning-column" id="meaning-column">
+                <!-- Arti Indonesia akan diisi JavaScript -->
+            </div>
+        </div>
+
+        <div class="game-controls">
+            <button class="game-btn" onclick="resetMatchingGame()">🔄 Ulangi Game</button>
+            <button class="game-btn" onclick="checkAllMatches()">✓ Periksa</button>
+        </div>
+
+        <div class="game-stats">
+            <div class="stat-item">
+                <div class="stat-label">Tercocokkan</div>
+                <div class="stat-value" id="matched-count">0/10</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Percobaan</div>
+                <div class="stat-value" id="attempt-count">0</div>
+            </div>
+        </div>
+    </section>
+
+    <section id="latihan">
+        <h2 class="section-title">📝 Latihan Soal</h2>
+        
+        <div class="quiz-header">
+            <div id="quiz-timer">⏱️ 03:00</div>
+            <button class="quiz-btn" onclick="startQuiz()" id="startButton">▶️ Mulai Kuis</button>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="quiz-progress"></div>
+            </div>
+            <div class="progress-text" id="progress-text">Soal 0/10</div>
+        </div>
+
+        <div id="quiz-container">
+            <div style="text-align: center; padding: 2rem; color: #666;">
+                <p>Klik "Mulai Kuis" untuk memulai timer dan mengerjakan 10 soal pilihan ganda</p>
+                <p><strong>Waktu: 3 menit</strong></p>
+            </div>
+        </div>
+
+        <div class="quiz-actions">
+            <button class="quiz-btn" onclick="submitQuiz()" id="submitButton" disabled>📤 Kirim Jawaban</button>
+            <button class="quiz-btn" onclick="resetQuiz()" id="resetButton" style="display: none;">🔄 Ulangi Kuis</button>
+        </div>
+
+        <div id="score"></div>
+    </section>
+
+    <div id="feedback" class="feedback" style="display: none;"></div>
+
+    <script>
+        // Data kosakata (TANPA KANJI)
+        const vocabData = [
+            { japanese: "おきます", romaji: "okimasu", meaning: "bangun tidur" },
+            { japanese: "あさごはんを たべます", romaji: "asagohan o tabemasu", meaning: "makan sarapan" },
+            { japanese: "はを みがきます", romaji: "ha o migakimasu", meaning: "menggosok gigi" },
+            { japanese: "かおを あらいます", romaji: "kao o araimasu", meaning: "mencuci muka" },
+            { japanese: "がっこうへ いきます", romaji: "gakkō e ikimasu", meaning: "pergi ke sekolah" },
+            { japanese: "べんきょうします", romaji: "benkyō shimasu", meaning: "belajar" },
+            { japanese: "ひるごはんを たべます", romaji: "hirugohan o tabemasu", meaning: "makan siang" },
+            { japanese: "うちへ かえります", romaji: "uchi e kaerimasu", meaning: "pulang ke rumah" },
+            { japanese: "しゅくだいを します", romaji: "shukudai o shimasu", meaning: "mengerjakan PR" },
+            { japanese: "ばんごはんを たべます", romaji: "bangohan o tabemasu", meaning: "makan malam" },
+            { japanese: "おふろに はいります", romaji: "ofuro ni hairimasu", meaning: "mandi" },
+            { japanese: "ねます", romaji: "nemasu", meaning: "tidur" }
+        ];
+
+        // Data soal kuis (10 soal pilihan ganda)
+        const quizQuestions = [
+            {
+                question: "Apa arti dari 'おきます'?",
+                options: ["Makan sarapan", "Bangun tidur", "Pergi ke sekolah", "Mandi"],
+                correct: 1
+            },
+            {
+                question: "Bagaimana mengatakan 'makan sarapan' dalam bahasa Jepang?",
+                options: ["はを みがきます", "あさごはんを たべます", "べんきょうします", "おきます"],
+                correct: 1
+            },
+            {
+                question: "Apa arti dari 'がっこうへ いきます'?",
+                options: ["Pulang ke rumah", "Pergi ke sekolah", "Makan siang", "Belajar"],
+                correct: 1
+            },
+            {
+                question: "Bagaimana mengatakan 'mengerjakan PR' dalam bahasa Jepang?",
+                options: ["しゅくだいを します", "ばんごはんを たべます", "おふろに はいります", "ねます"],
+                correct: 0
+            },
+            {
+                question: "Apa arti dari 'はを みがきます'?",
+                options: ["Mencuci muka", "Menggosok gigi", "Mandi", "Tidur"],
+                correct: 1
+            },
+            {
+                question: "Bagaimana mengatakan 'pulang ke rumah' dalam bahasa Jepang?",
+                options: ["がっこうへ いきます", "うちへ かえります", "べんきょうします", "おきます"],
+                correct: 1
+            },
+            {
+                question: "Apa arti dari 'ばんごはんを たべます'?",
+                options: ["Makan sarapan", "Makan siang", "Makan malam", "Makan camilan"],
+                correct: 2
+            },
+            {
+                question: "Bagaimana mengatakan 'mandi' dalam bahasa Jepang?",
+                options: ["かおを あらいます", "はを みがきます", "おふろに はいります", "ねます"],
+                correct: 2
+            },
+            {
+                question: "Apa arti dari 'ひるごはんを たべます'?",
+                options: ["Makan sarapan", "Makan siang", "Makan malam", "Makan camilan"],
+                correct: 1
+            },
+            {
+                question: "Bagaimana mengatakan 'belajar' dalam bahasa Jepang?",
+                options: ["おきます", "たべます", "べんきょうします", "いきます"],
+                correct: 2
+            }
+        ];
+
+        // Variabel kuis
+        let quizTime = 180; // 3 menit dalam detik
+        let timerInterval;
+        let quizStarted = false;
+        let userAnswers = [];
+        let currentQuestion = 0;
+
+        // Fungsi untuk menampilkan section
+        function showSection(sectionId) {
+            // Sembunyikan semua section
+            document.querySelectorAll('section').forEach(section => {
+                section.classList.remove('visible');
+            });
+            
+            // Tampilkan section yang dipilih
+            document.getElementById(sectionId).classList.add('visible');
+            
+            // Update tombol navigasi
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Aktifkan tombol yang sesuai
+            document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
+            
+            // Load data jika diperlukan
+            if (sectionId === 'materi') {
+                loadMateriData();
+            } else if (sectionId === 'matching-game') {
+                initMatchingGame();
+            }
+        }
+
+        // Event listener untuk tombol navigasi
+        document.addEventListener('DOMContentLoaded', function() {
+            loadMateriData();
+            
+            // Event listener untuk tombol cetak
+            document.getElementById('printMateriButton').addEventListener('click', function() {
+                window.print();
+            });
+            
+            // Event listener untuk semua tombol navigasi
+            document.querySelectorAll('.nav-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const sectionId = this.getAttribute('data-section');
+                    showSection(sectionId);
+                });
+            });
+        });
+
+        // Load data materi
+        function loadMateriData() {
+            const tbody = document.getElementById('materi-body');
+            tbody.innerHTML = '';
+            
+            vocabData.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.japanese}</td>
+                    <td>${item.romaji}</td>
+                    <td>${item.meaning}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // ==================== FUNGSI KUIS ====================
+
+        function startQuiz() {
+            if (quizStarted) return;
+            
+            quizStarted = true;
+            quizTime = 180; // Reset ke 3 menit
+            userAnswers = new Array(quizQuestions.length).fill(null);
+            currentQuestion = 0;
+            
+            document.getElementById('submitButton').disabled = false;
+            document.getElementById('startButton').disabled = true;
+            
+            // Mulai timer
+            timerInterval = setInterval(updateTimer, 1000);
+            updateTimer(); // Update immediately
+            
+            // Load soal kuis
+            loadQuizQuestions();
+            
+            showFeedback('Kuis dimulai! Waktu 3 menit.', 'success');
+        }
+
+        function updateTimer() {
+            const minutes = Math.floor(quizTime / 60);
+            const seconds = quizTime % 60;
+            
+            // Format waktu: MM:SS
+            const timeString = `⏱️ ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            const timerElement = document.getElementById('quiz-timer');
+            timerElement.textContent = timeString;
+            
+            // Ganti warna dan animasi saat waktu hampir habis
+            timerElement.classList.remove('timer-warning', 'timer-danger');
+            if (quizTime <= 30) { // 30 detik terakhir
+                timerElement.classList.add('timer-danger');
+            } else if (quizTime <= 60) { // 1 menit terakhir
+                timerElement.classList.add('timer-warning');
+            }
+            
+            // Cek jika waktu habis
+            if (quizTime <= 0) {
+                clearInterval(timerInterval);
+                showFeedback('⏰ Waktu habis! Kuis otomatis dikirim.', 'error');
+                submitQuiz();
+            }
+            
+            quizTime--;
+        }
+
+        function loadQuizQuestions() {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = '';
+            
+            quizQuestions.forEach((question, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question';
+                questionDiv.innerHTML = `
+                    <p>Soal ${index + 1}: ${question.question}</p>
+                    ${question.options.map((option, optIndex) => `
+                        <label>
+                            <input type="radio" name="question${index}" value="${optIndex}" 
+                                   onchange="saveAnswer(${index}, ${optIndex})">
+                            ${option}
+                        </label>
+                    `).join('')}
+                `;
+                container.appendChild(questionDiv);
+            });
+            
+            updateProgress();
+        }
+
+        function saveAnswer(questionIndex, answerIndex) {
+            userAnswers[questionIndex] = answerIndex;
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const answered = userAnswers.filter(answer => answer !== null).length;
+            const total = quizQuestions.length;
+            const progress = (answered / total) * 100;
+            
+            document.getElementById('progress-text').textContent = `Soal ${answered}/${total}`;
+            document.getElementById('quiz-progress').style.width = `${progress}%`;
+        }
+
+        function submitQuiz() {
+            clearInterval(timerInterval);
+            quizStarted = false;
+            
+            const score = calculateScore();
+            
+            // Tampilkan hasil dengan detail
+            document.getElementById('score').innerHTML = `
+                <h3>🎊 Hasil Kuis</h3>
+                <p>Skor Anda: <strong>${score}/${quizQuestions.length}</strong></p>
+                <p>Status: ${score >= 7 ? '🎉 Lulus! Excellent!' : score >= 5 ? '👍 Cukup Baik!' : '❌ Perlu belajar lagi!'}</p>
+                <div style="margin-top: 1rem;">
+                    <button class="quiz-btn" onclick="showAnswerDetails()">📋 Lihat Jawaban Detail</button>
+                </div>
+            `;
+            
+            document.getElementById('submitButton').disabled = true;
+            document.getElementById('resetButton').style.display = 'inline-block';
+            document.getElementById('startButton').disabled = false;
+            
+            showFeedback(`Jawaban telah dikirim! Skor: ${score}/${quizQuestions.length}`, 'success');
+        }
+
+        function calculateScore() {
+            let score = 0;
+            quizQuestions.forEach((question, index) => {
+                if (userAnswers[index] === question.correct) {
+                    score++;
+                }
+            });
+            return score;
+        }
+
+        function showAnswerDetails() {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = '';
+            
+            quizQuestions.forEach((question, index) => {
+                const questionDiv = document.createElement('div');
+                const userAnswer = userAnswers[index];
+                const isCorrect = userAnswer === question.correct;
+                
+                questionDiv.className = `question ${isCorrect ? 'correct' : 'incorrect'}`;
+                questionDiv.innerHTML = `
+                    <p>Soal ${index + 1}: ${question.question}</p>
+                    ${question.options.map((option, optIndex) => {
+                        let style = '';
+                        if (optIndex === question.correct) {
+                            style = 'background: #e8f5e9; font-weight: bold;';
+                        } else if (optIndex === userAnswer && !isCorrect) {
+                            style = 'background: #ffebee; color: #d32f2f;';
+                        }
+                        return `
+                            <label style="${style}">
+                                <input type="radio" name="question${index}" value="${optIndex}" 
+                                       ${userAnswer === optIndex ? 'checked' : ''} disabled>
+                                ${option} ${optIndex === question.correct ? ' ✓' : ''}
+                            </label>
+                        `;
+                    }).join('')}
+                    ${!isCorrect ? `
+                        <div class="correct-answer">
+                            Jawaban benar: ${question.options[question.correct]}
+                        </div>
+                    ` : ''}
+                `;
+                container.appendChild(questionDiv);
+            });
+        }
+
+        function resetQuiz() {
+            clearInterval(timerInterval);
+            quizStarted = false;
+            quizTime = 180;
+            
+            // Reset tampilan timer
+            document.getElementById('quiz-timer').textContent = '⏱️ 03:00';
+            document.getElementById('quiz-timer').className = '';
+            
+            // Reset kuis
+            document.getElementById('score').innerHTML = '';
+            document.getElementById('submitButton').disabled = true;
+            document.getElementById('resetButton').style.display = 'none';
+            document.getElementById('startButton').disabled = false;
+            document.getElementById('quiz-container').innerHTML = `
+                <div style="text-align: center; padding: 2rem; color: #666;">
+                    <p>Klik "Mulai Kuis" untuk memulai timer dan mengerjakan 10 soal pilihan ganda</p>
+                    <p><strong>Waktu: 3 menit</strong></p>
+                </div>
+            `;
+            document.getElementById('progress-text').textContent = 'Soal 0/10';
+            document.getElementById('quiz-progress').style.width = '0%';
+            
+            showFeedback('Kuis direset!', 'success');
+        }
+
+        // ==================== GAME MATCHING ====================
+
+        function initMatchingGame() {
+            const wordColumn = document.getElementById('word-column');
+            const meaningColumn = document.getElementById('meaning-column');
+            
+            wordColumn.innerHTML = '';
+            meaningColumn.innerHTML = '';
+            
+            // Acak urutan vocab (ambil 10 pertama)
+            const gameVocab = [...vocabData].slice(0, 10).sort(() => Math.random() - 0.5);
+            const shuffledMeanings = [...gameVocab].sort(() => Math.random() - 0.5);
+            
+            // Tambahkan kata Jepang
+            gameVocab.forEach((item, index) => {
+                const wordItem = document.createElement('div');
+                wordItem.className = 'word-item';
+                wordItem.textContent = item.japanese;
+                wordItem.dataset.meaning = item.meaning;
+                wordItem.onclick = () => selectWordItem(wordItem);
+                wordColumn.appendChild(wordItem);
+            });
+            
+            // Tambahkan arti Indonesia
+            shuffledMeanings.forEach((item, index) => {
+                const meaningItem = document.createElement('div');
+                meaningItem.className = 'meaning-item';
+                meaningItem.textContent = item.meaning;
+                meaningItem.dataset.meaning = item.meaning;
+                meaningItem.onclick = () => selectMeaningItem(meaningItem);
+                meaningColumn.appendChild(meaningItem);
+            });
+            
+            // Reset statistik
+            document.getElementById('matched-count').textContent = '0/10';
+            document.getElementById('attempt-count').textContent = '0';
+            
+            selectedWord = null;
+            selectedMeaning = null;
+            attemptCount = 0;
+            matchedPairs = 0;
+        }
+
+        let selectedWord = null;
+        let selectedMeaning = null;
+        let attemptCount = 0;
+        let matchedPairs = 0;
+
+        function selectWordItem(wordItem) {
+            if (wordItem.classList.contains('matched')) return;
+            
+            // Reset seleksi sebelumnya
+            document.querySelectorAll('.word-item.selected').forEach(item => {
+                if (item !== wordItem) item.classList.remove('selected');
+            });
+            document.querySelectorAll('.meaning-item.selected').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            wordItem.classList.add('selected');
+            selectedWord = wordItem;
+            
+            checkMatch();
+        }
+
+        function selectMeaningItem(meaningItem) {
+            if (meaningItem.classList.contains('matched')) return;
+            
+            // Reset seleksi sebelumnya
+            document.querySelectorAll('.meaning-item.selected').forEach(item => {
+                if (item !== meaningItem) item.classList.remove('selected');
+            });
+            document.querySelectorAll('.word-item.selected').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            meaningItem.classList.add('selected');
+            selectedMeaning = meaningItem;
+            
+            checkMatch();
+        }
+
+        function checkMatch() {
+            if (selectedWord && selectedMeaning) {
+                attemptCount++;
+                document.getElementById('attempt-count').textContent = attemptCount;
+                
+                // Cek apakah cocok berdasarkan arti
+                if (selectedWord.dataset.meaning === selectedMeaning.dataset.meaning) {
+                    // Cocok
+                    selectedWord.classList.add('matched');
+                    selectedMeaning.classList.add('matched');
+                    selectedWord.classList.remove('selected');
+                    selectedMeaning.classList.remove('selected');
+                    
+                    matchedPairs++;
+                    document.getElementById('matched-count').textContent = matchedPairs + '/10';
+                    
+                    showFeedback('✓ Cocok!', 'success');
+                    
+                    // Cek jika semua sudah cocok
+                    if (matchedPairs === 10) {
+                        showFeedback('🎉 Selamat! Anda menyelesaikan game!', 'success');
+                    }
+                } else {
+                    // Tidak cocok
+                    showFeedback('✗ Tidak cocok, coba lagi!', 'error');
+                    setTimeout(() => {
+                        selectedWord.classList.remove('selected');
+                        selectedMeaning.classList.remove('selected');
+                    }, 1000);
+                }
+                
+                selectedWord = null;
+                selectedMeaning = null;
+            }
+        }
+
+        function resetMatchingGame() {
+            initMatchingGame();
+            showFeedback('Game diulang!', 'success');
+        }
+
+        function checkAllMatches() {
+            showFeedback('Memeriksa semua kecocokan...', 'success');
+        }
+
+        // Fungsi feedback
+        function showFeedback(message, type) {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = message;
+            feedback.className = `feedback ${type}`;
+            feedback.style.display = 'block';
+            
+            setTimeout(() => {
+                feedback.style.display = 'none';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
