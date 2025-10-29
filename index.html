@@ -595,10 +595,10 @@
     </header>
 
     <nav>
-        <button class="nav-btn active" data-section="intro">🏠 Beranda</button>
-        <button class="nav-btn" data-section="materi">📘 Materi</button>
-        <button class="nav-btn" data-section="matching-game">🎮 Game Mencocokkan</button>
-        <button class="nav-btn" data-section="latihan">📝 Latihan Soal</button>
+        <button class="nav-btn active" onclick="showSection('intro')">🏠 Beranda</button>
+        <button class="nav-btn" onclick="showSection('materi')">📘 Materi</button>
+        <button class="nav-btn" onclick="showSection('matching-game')">🎮 Game Mencocokkan</button>
+        <button class="nav-btn" onclick="showSection('latihan')">📝 Latihan Soal</button>
     </nav>
 
     <section id="intro" class="visible">
@@ -883,53 +883,57 @@
         let userAnswers = [];
         let currentQuestion = 0;
 
-        // Fungsi untuk menampilkan section
+        // Fungsi untuk menampilkan section - PERBAIKAN UTAMA
         function showSection(sectionId) {
+            console.log("Memuat section:", sectionId); // Untuk debugging
+            
             // Sembunyikan semua section
             document.querySelectorAll('section').forEach(section => {
                 section.classList.remove('visible');
             });
             
             // Tampilkan section yang dipilih
-            document.getElementById(sectionId).classList.add('visible');
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.classList.add('visible');
+            } else {
+                console.error("Section tidak ditemukan:", sectionId);
+                return;
+            }
             
             // Update tombol navigasi
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
             
-            // Aktifkan tombol yang sesuai
-            document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
+            // Aktifkan tombol yang sesuai - CARI BERDASARKAN ONCLICK
+            const activeButton = Array.from(document.querySelectorAll('.nav-btn')).find(btn => {
+                return btn.getAttribute('onclick') === `showSection('${sectionId}')`;
+            });
+            
+            if (activeButton) {
+                activeButton.classList.add('active');
+            }
             
             // Load data jika diperlukan
             if (sectionId === 'materi') {
                 loadMateriData();
             } else if (sectionId === 'matching-game') {
                 initMatchingGame();
+            } else if (sectionId === 'latihan') {
+                // Reset kuis jika perlu
+                resetQuiz();
             }
         }
-
-        // Event listener untuk tombol navigasi
-        document.addEventListener('DOMContentLoaded', function() {
-            loadMateriData();
-            
-            // Event listener untuk tombol cetak
-            document.getElementById('printMateriButton').addEventListener('click', function() {
-                window.print();
-            });
-            
-            // Event listener untuk semua tombol navigasi
-            document.querySelectorAll('.nav-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    const sectionId = this.getAttribute('data-section');
-                    showSection(sectionId);
-                });
-            });
-        });
 
         // Load data materi
         function loadMateriData() {
             const tbody = document.getElementById('materi-body');
+            if (!tbody) {
+                console.error("Element materi-body tidak ditemukan");
+                return;
+            }
+            
             tbody.innerHTML = '';
             
             vocabData.forEach(item => {
@@ -1132,6 +1136,11 @@
             const wordColumn = document.getElementById('word-column');
             const meaningColumn = document.getElementById('meaning-column');
             
+            if (!wordColumn || !meaningColumn) {
+                console.error("Element game tidak ditemukan");
+                return;
+            }
+            
             wordColumn.innerHTML = '';
             meaningColumn.innerHTML = '';
             
@@ -1264,6 +1273,22 @@
                 feedback.style.display = 'none';
             }, 2000);
         }
+
+        // Inisialisasi saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Aplikasi dimuat!");
+            
+            // Load data awal
+            loadMateriData();
+            
+            // Event listener untuk tombol cetak
+            document.getElementById('printMateriButton').addEventListener('click', function() {
+                window.print();
+            });
+            
+            // Pastikan beranda aktif
+            showSection('intro');
+        });
     </script>
 </body>
 </html>
